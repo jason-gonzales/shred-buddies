@@ -12,7 +12,7 @@ export default class EventList extends React.Component {
       // isLoading: false
     };
     this.getEvents = this.getEvents.bind(this);
-    this.eventList = this.eventList.bind(this);
+    // this.eventList = this.eventList.bind(this);
     // this.getGuests = this.getGuests.bind(this);
 
   }
@@ -51,24 +51,21 @@ export default class EventList extends React.Component {
   //     });
   // }
 
-  eventList() {
-    const list = this.state.events.map(event =>
-      <EventListItem
-        addGuest={this.props.addGuest}
-        user={this.props.user.profileId}
-        key={event.eventId}
-        getEvents={this.getEvents}
-        updateEvent={this.updateEvent}
-        deleteEvent = { this.props.deleteEvent }
-        events={event}
-        setView={this.props.setView}
-        guest={this.props.guest}
-        isAttending={this.props.isAttending}
-      />);
+  // const list = this.state.events.map(event =>
+  //   <EventListItem
+  //     addGuest={this.props.addGuest}
+  //     user={this.props.user.profileId}
+  //     key={event.eventId}
+  //     getEvents={this.getEvents}
+  //     updateEvent={this.updateEvent}
+  //     deleteEvent = { this.props.deleteEvent }
+  //     events={event}
+  //     setView={this.props.setView}
+  //     guest={this.props.guest}
+  //     isAttending={this.props.isAttending}
+  //   />);
 
-    return list;
-
-  }
+  // return list;
 
   componentDidMount() {
     this.getEvents();
@@ -82,6 +79,20 @@ export default class EventList extends React.Component {
     // if (this.state.events) {
     //   console.log(this.state.events);
     // }
+
+    const list = this.state.events.map(event =>
+      <EventListItem
+        addGuest={this.props.addGuest}
+        user={this.props.user.profileId}
+        key={event.eventId}
+        getEvents={this.getEvents}
+        updateEvent={this.updateEvent}
+        deleteEvent={this.props.deleteEvent}
+        events={event}
+        setView={this.props.setView}
+        guest={this.props.guest}
+        isAttending={this.props.isAttending}
+      />);
 
     return (
 
@@ -104,7 +115,7 @@ export default class EventList extends React.Component {
           </li>
         </ul>
         <div className="row justify-content-center my-5">
-          {this.eventList()}
+          {list}
           {/* <Attending guest={this.props.guest} /> */}
         </div>
 

@@ -125,8 +125,8 @@ app.get('/api/events', (req, res, next) => {
     "p"."imgUrl" as "profileImage",
     "e"."description" as "eventDescription",
     "e"."startDate" as "start",
-    "e"."endDate" as "end"
-
+    "e"."endDate" as "end",
+    "e"."attendees" as "attendees"
     from "event" as "e"
     join "resort" as "r" using ("resortId")
     join "profile" as "p" using ("profileId")
@@ -139,7 +139,7 @@ app.get('/api/events', (req, res, next) => {
 });
 
 app.post('/api/event/:profile', (req, res, next) => {
-  if (!req.body.resortId && !req.body.startDate && !req.body.endDate && !req.body.profileId && !req.body.description) throw new ClientError(' resortId , startDate, endDate, profileId, description must be filled out', 400);
+  if (!req.body.resortId && !req.body.startDate && !req.body.endDate && !req.body.profileId && !req.body.description) { throw new ClientError(' resortId , startDate, endDate, profileId, description, attendees must be filled out', 400); }
   const insert = `
         insert into "event"("resortId","startDate","endDate", "profileId", "description")
         values ($1,$2,$3,$4,$5)
@@ -177,7 +177,7 @@ app.put('/api/event/:eventId', (req, res, next) => {
 
   const values = [req.body.resortId, req.body.startDate, req.body.endDate, req.body.profileId, req.body.description, req.params.eventId];
   const sql =
-  `update "event"
+    `update "event"
     set "resortId" =$1,
         "startDate" =$2,
         "endDate" =$3,
@@ -192,82 +192,99 @@ app.put('/api/event/:eventId', (req, res, next) => {
     .catch(err => next(err));
 });
 
-app.get('/api/attendees', (req, res, next) => {
-  // const profileId = parseInt(req.params.profileId, 10);
+app.put('/api/event/:eventId', (req, res, next) => {
 
-  const sql = `
-  SELECT profileId, name, imgUrl
-  FROM attendees
-  INNER JOIN profile
-  ON attendees.profileId = profile.profileId
-  `;
-  db.query(sql)
-    .then(result => res.status(200).json(result.rows[0]))
-    .catch(err => next(err));
-});
+  const values = [req.params.eventId, req.body.attendees];
 
-app.post('/api/attendees/:profile', (req, res, next) => {
-
-  if (!req.body.profileId && !req.body.eventId && !req.body.isCheckedIn) throw new ClientError('profileId, eventId, isCheckedIn must be filled out', 400);
-  const insert = `
- insert into "attendees"("profileId","eventId","isCheckedIn")
- values($1,$2,$3)
- returning *;
-`;
-
-  const values = [req.params.profile, req.body.eventId, req.body.isCheckedIn];
-  db.query(insert, values)
-    .then(result => result.rows[0])
-    .then(result => {
-      const select = `
-      select "profile"."profileId" as "profileId",
-            "profile"."name" as "profileName",
-            "profile"."imgUrl" as "imgUrl"
-            "event"."eventId" as "eventId",
-            "attendees"."isCheckedIn" as "isCheckedIn"
-      from "attendees"
-      join "profile" using ("profileId")
-      join "event" using ("eventId")
-      where "profileId" = $1
+  const sql =
+    `update "event"
+    set "attendees" = array_append(attendees, 24)
+    where "eventId" = $1;
 
   `;
-      db.query(select, [result.eventId])
-        .then(result => {
-          res.status(201).json(result.rows[0]);
-        });
-    })
-    .catch(err => {
-      console.error('err');
-      next(err);
-    });
-});
-
-app.put('api/attendees/:profileId', (req, res, next) => {
-  const profileId = parseInt(req.params.profileId, req.body);
-
-  if (profileId < 0 || isNaN(profileId)) {
-    throw (new ClientError(`Request Id ${req.params.profileId} is not valid`, 400));
-  }
-
-  const sql = `
-  update "attendees"
-  set "isCheckedIn" = true
-  where "profileId" = $1
-  returning *
-  `;
-
-  const values = [profileId];
-
   db.query(sql, values)
     .then(result => {
-      if (result.rows.length === 0) {
-        next(new ClientError(`Request Id ${profileId} returned no requests`, 404));
-      } else {
-        return res.status(200).json(result.rows[0]);
-      }
+      res.status(200).json({});
     })
     .catch(err => next(err));
 });
+
+// app.get('/api/attendees', (req, res, next) => {
+//   // const profileId = parseInt(req.params.profileId, 10);
+
+//   const sql = `
+//   SELECT profileId, name, imgUrl
+//   FROM attendees
+//   INNER JOIN profile
+//   ON attendees.profileId = profile.profileId
+//   `;
+//   db.query(sql)
+//     .then(result => res.status(200).json(result.rows[0]))
+//     .catch(err => next(err));
+// });
+
+// app.post('/api/attendees/:profile', (req, res, next) => {
+
+//   if (!req.body.profileId && !req.body.eventId && !req.body.isCheckedIn) throw new ClientError('profileId, eventId, isCheckedIn must be filled out', 400);
+//   const insert = `
+//  insert into "attendees"("profileId","eventId","isCheckedIn")
+//  values($1,$2,$3)
+//  returning *;
+// `;
+
+//   const values = [req.params.profile, req.body.eventId, req.body.isCheckedIn];
+//   db.query(insert, values)
+//     .then(result => result.rows[0])
+//     .then(result => {
+//       const select = `
+//       select "profile"."profileId" as "profileId",
+//             "profile"."name" as "profileName",
+//             "profile"."imgUrl" as "imgUrl"
+//             "event"."eventId" as "eventId",
+//             "attendees"."isCheckedIn" as "isCheckedIn"
+//       from "attendees"
+//       join "profile" using ("profileId")
+//       join "event" using ("eventId")
+//       where "profileId" = $1
+
+//   `;
+//       db.query(select, [result.eventId])
+//         .then(result => {
+//           res.status(201).json(result.rows[0]);
+//         });
+//     })
+//     .catch(err => {
+//       console.error('err');
+//       next(err);
+//     });
+// });
+
+// app.put('api/attendees/:profileId', (req, res, next) => {
+//   const profileId = parseInt(req.params.profileId, req.body);
+
+//   if (profileId < 0 || isNaN(profileId)) {
+//     throw (new ClientError(`Request Id ${req.params.profileId} is not valid`, 400));
+//   }
+
+//   const sql = `
+//   update "attendees"
+//   set "isCheckedIn" = true
+//   where "profileId" = $1
+//   returning *
+//   `;
+
+//   const values = [profileId];
+
+//   db.query(sql, values)
+//     .then(result => {
+//       if (result.rows.length === 0) {
+//         next(new ClientError(`Request Id ${profileId} returned no requests`, 404));
+//       } else {
+//         return res.status(200).json(result.rows[0]);
+//       }
+//     })
+//     .catch(err => next(err));
+// });
 
 app.delete('/api/event/:eventId', (req, res) => {
   const eventId = parseInt(req.params.eventId, 10);

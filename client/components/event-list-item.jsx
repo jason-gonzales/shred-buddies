@@ -17,6 +17,7 @@ export default class EventList extends React.Component {
     // this.getGuests = this.getGuests.bind(this);
     // this.guestList = this.guestList.bind(this);
     // this.attend = this.attend.bind(this);
+    this.addGuest = this.addGuest.bind(this);
   }
 
   handleClick() {
@@ -28,6 +29,19 @@ export default class EventList extends React.Component {
   handleDelete() {
     this.props.deleteEvent(this.props.events.eventId);
 
+  }
+
+  addGuest() {
+    const requestOption = {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(this.props.events.attendees)
+    };
+    fetch(`/api/event/${this.props.events.eventId}`, requestOption)
+      .then(() => {
+        this.props.setView('main');
+      })
+      .catch(err => console.error(err));
   }
 
   // getAttendees() {
@@ -108,18 +122,17 @@ export default class EventList extends React.Component {
   // }
 
   render() {
-    // console.log(this.props.guest);
+    // console.log(this.props.events.attendees[0].profileId);
 
     const profile = this.props.events.profileId;
     const user = this.props.user;
     const { events } = this.props;
-
     const start = new Date(events.start);
     const end = new Date(events.end);
 
     return (
 
-      <div className="event-size mx-lg-2">
+      <div className="mx-lg-2">
         <div className="card bg-dark text-white my-3">
           <img className="event-img" src={this.props.events.resortImage} alt="Card image" />
           <div className="card-img-overlay">
@@ -153,7 +166,7 @@ export default class EventList extends React.Component {
                       </div>
                       </React.Fragment>}
                 </MyContext.Consumer> */}
-                {this.state.guests ? <>
+                {this.props.guests ? <>
 
                   <img
                     className="attending-pic"
@@ -178,7 +191,7 @@ export default class EventList extends React.Component {
               profile !== user ? <>
                 <div className="text-center">
                   <button
-                    onClick={this.getAttendees}
+                    onClick={this.addGuest}
                     className="join-button"
                   >join</button></div></> : null
             }

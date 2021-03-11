@@ -80,7 +80,7 @@ export default class UpdateEvent extends React.Component {
   // }
 
   render() {
-
+    // console.log(this.state);
     return (
       <div className="add-event">
         <form className="mx-3">
